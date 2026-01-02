@@ -1,70 +1,182 @@
-# Getting Started with Create React App
+# X-Ray SDK - Debugging Multi-Step Algorithmic Systems
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+X-Ray is a debugging system for multi-step, non-deterministic algorithmic pipelines. Unlike traditional tracing tools that answer "what happened," X-Ray answers "why did the system make this decision?"
 
-## Available Scripts
+## Overview
 
-In the project directory, you can run:
+This project includes:
+- **X-Ray SDK**: A lightweight JavaScript library for instrumenting pipelines
+- **X-Ray API**: Node.js/Express server for ingesting and querying X-Ray data
+- **React Demo App**: Interactive UI demonstrating X-Ray in action with a competitor selection pipeline
 
-### `npm start`
+## Architecture
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed system design, data model rationale, and API specifications.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+See [QUERYABILITY.md](./QUERYABILITY.md) for comprehensive explanation of cross-pipeline queryability, conventions, and how the system handles variability across different use cases.
 
-### `npm test`
+## Setup Instructions
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
 
-### `npm run build`
+- Node.js 14+ and npm
+- Two terminal windows (one for API server, one for React app)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 1. Install Dependencies
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+# Install React app dependencies
+npm install
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Install API server dependencies
+cd api
+npm install
+cd ..
+```
 
-### `npm run eject`
+### 2. Start the API Server
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+In the first terminal:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+cd api
+npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+The API server will run on `http://localhost:3001`
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### 3. Start the React App
 
-## Learn More
+In the second terminal (from the project root):
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm start
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The React app will open at `http://localhost:3000`
 
-### Code Splitting
+### 4. Run the Demo
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. Click "Run Competitor Selection Demo" in the React app
+2. Watch the pipeline execute (simulated with delays)
+3. View the run details to see all steps, candidates, and reasoning
+4. Try the "Query: Filter Elimination >90%" button to see cross-run queries
 
-### Analyzing the Bundle Size
+## Approach
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Core Design Principles
 
-### Making a Progressive Web App
+1. **Run-Centric Model**: All steps belong to a run, enabling end-to-end traceability from output back to input.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+2. **Step Independence**: Steps are stored independently, not just nested in runs. This enables efficient cross-run queries like "show all filtering steps that eliminated >90% of candidates."
 
-### Advanced Configuration
+3. **Flexible Schema**: No rigid schema enforcement—developers define what's meaningful for their pipeline. The SDK accepts any object structure.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+4. **Intelligent Summarization**: Large arrays (e.g., 5,000 candidates) are automatically summarized to balance completeness with storage costs. Developers control limits per step.
 
-### Deployment
+5. **Non-Blocking**: SDK operations are async and never block pipeline execution. If the API is unavailable, the pipeline continues normally.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Key Features
 
-### `npm run build` fails to minify
+- **Minimal Instrumentation**: Get useful debugging info with just 3-4 SDK calls
+- **Full Instrumentation**: Record detailed context at each step (candidates, filtered items, reasoning)
+- **Cross-Pipeline Queries**: Convention-based approach enables queries across different pipeline types
+- **Graceful Degradation**: Pipeline continues even if X-Ray backend is unavailable
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### SDK Usage Example
+
+```javascript
+import { initXRay } from './xray-sdk';
+
+// Initialize
+const xray = initXRay({ apiUrl: 'http://localhost:3001/api' });
+
+// Start a run
+const runId = xray.startRun({
+  pipeline: 'competitor-selection',
+  input: { product: 'Wireless Phone Charger' },
+});
+
+// Record a step
+xray.recordStep({
+  name: 'keyword-generation',
+  type: 'llm',
+  input: { product },
+  output: { keywords: ['wireless', 'charger', ...] },
+  reasoning: 'Generated keywords from product title',
+});
+
+// End run
+xray.endRun({ status: 'success', output: result });
+```
+
+## Project Structure
+
+```
+assessment/
+├── src/
+│   ├── xray-sdk/
+│   │   └── index.js          # X-Ray SDK library
+│   ├── demo/
+│   │   └── CompetitorSelectionDemo.js  # Demo pipeline
+│   ├── App.js                # React UI
+│   └── App.css
+├── api/
+│   ├── server.js             # Express API server
+│   └── package.json
+├── ARCHITECTURE.md           # Detailed architecture document
+└── README.md                 # This file
+```
+
+## API Endpoints
+
+- `POST /api/ingest` - Ingest events from SDK
+- `GET /api/runs` - Query runs with filters
+- `GET /api/runs/:runId` - Get specific run details
+- `GET /api/steps` - Query steps across runs
+- `GET /api/query/filter-elimination` - Find runs with high filter elimination rates
+- `GET /api/pipelines` - List all pipelines
+- `GET /api/pipelines/:pipeline/stats` - Get statistics for a pipeline
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for full API specification.
+
+## Known Limitations
+
+1. **In-Memory Storage**: The demo uses in-memory storage. Production would need a database (PostgreSQL, MongoDB, etc.).
+
+2. **No Authentication**: The API has no authentication/authorization. Production would need security layers.
+
+3. **No Retry Logic**: Failed API calls are logged but not retried. Production would use a message queue (RabbitMQ, Kafka).
+
+4. **Limited Query Language**: Query endpoints are fixed. Production would benefit from a flexible query language.
+
+5. **No Data Retention**: All data persists indefinitely. Production would need retention policies.
+
+## Future Improvements
+
+- Replace in-memory storage with database
+- Add message queue for reliability
+- Implement data retention and archiving
+- Add full-text search on reasoning fields
+- Build comprehensive dashboard UI
+- Add TypeScript types
+- Create framework integrations (Express middleware, React hooks)
+- Add metrics and alerting
+- Implement horizontal scaling
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) "What Next?" section for detailed roadmap.
+
+## Testing
+
+The demo includes a simulated competitor selection pipeline that:
+1. Generates keywords (LLM step)
+2. Searches for 5,000 candidate products
+3. Filters down to ~30 based on price, rating, reviews, category
+4. Evaluates relevance with LLM
+5. Ranks and selects the best match
+
+Each step is instrumented with X-Ray, showing how debugging works in practice.
+
+## License
+
+This is an assessment project.
