@@ -7,7 +7,7 @@ X-Ray is a debugging system for multi-step, non-deterministic algorithmic pipeli
 This project includes:
 - **X-Ray SDK**: A lightweight JavaScript library for instrumenting pipelines
 - **X-Ray API**: Node.js/Express server for ingesting and querying X-Ray data
-- **React Demo App**: Interactive UI demonstrating X-Ray in action with a competitor selection pipeline
+- **React Demo App**: Interactive UI demonstrating X-Ray in action with three demo pipelines (Competitor Selection, Listing Optimization, Product Categorization)
 
 ## Architecture
 
@@ -20,47 +20,50 @@ See [QUERYABILITY.md](./QUERYABILITY.md) for comprehensive explanation of cross-
 ### Prerequisites
 
 - Node.js 14+ and npm
-- Two terminal windows (one for API server, one for React app)
+- Two terminal windows (one for backend server, one for frontend app)
 
 ### 1. Install Dependencies
 
 ```bash
-# Install React app dependencies
+# Install frontend dependencies
+cd frontend
 npm install
+cd ..
 
-# Install API server dependencies
-cd api
+# Install backend dependencies
+cd backend
 npm install
 cd ..
 ```
 
-### 2. Start the API Server
+### 2. Start the Backend Server
 
 In the first terminal:
 
 ```bash
-cd api
+cd backend
 npm start
 ```
 
-The API server will run on `http://localhost:3001`
+The backend server will run on `http://localhost:3001`
 
-### 3. Start the React App
+### 3. Start the Frontend App
 
-In the second terminal (from the project root):
+In the second terminal:
 
 ```bash
+cd frontend
 npm start
 ```
 
-The React app will open at `http://localhost:3000`
+The frontend app will open at `http://localhost:3000`
 
 ### 4. Run the Demo
 
-1. Click "Run Competitor Selection Demo" in the React app
-2. Watch the pipeline execute (simulated with delays)
+1. Select an algorithm from the dropdown (Competitor Selection, Listing Optimization, or Product Categorization)
+2. Click "Run Demo" and watch the pipeline execute (simulated with delays)
 3. View the run details to see all steps, candidates, and reasoning
-4. Try the "Query: Filter Elimination >90%" button to see cross-run queries
+4. Try the "Query: Filter Elimination >90%" button to see cross-pipeline queries
 
 ## Approach
 
@@ -113,19 +116,25 @@ xray.endRun({ status: 'success', output: result });
 ## Project Structure
 
 ```
-assessment/
-├── src/
-│   ├── xray-sdk/
-│   │   └── index.js          # X-Ray SDK library
-│   ├── demo/
-│   │   └── CompetitorSelectionDemo.js  # Demo pipeline
-│   ├── App.js                # React UI
-│   └── App.css
-├── api/
-│   ├── server.js             # Express API server
+equal-collective-assessment/
+├── frontend/
+│   ├── src/
+│   │   ├── xray-sdk/
+│   │   │   └── index.js          # X-Ray SDK library
+│   │   ├── demo/
+│   │   │   ├── CompetitorSelectionDemo.js
+│   │   │   ├── ListingOptimizationDemo.js
+│   │   │   └── ProductCategorizationDemo.js
+│   │   ├── App.js                # React UI
+│   │   └── App.css
+│   ├── public/
 │   └── package.json
-├── ARCHITECTURE.md           # Detailed architecture document
-└── README.md                 # This file
+├── backend/
+│   ├── server.js                 # Express API server
+│   └── package.json
+├── ARCHITECTURE.md               # Detailed architecture document
+├── QUERYABILITY.md               # Cross-pipeline queryability design
+└── README.md                     # This file
 ```
 
 ## API Endpoints
@@ -167,14 +176,30 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) "What Next?" section for detailed roadm
 
 ## Testing
 
-The demo includes a simulated competitor selection pipeline that:
+The demo includes three simulated algorithmic pipelines:
+
+**1. Competitor Selection:**
 1. Generates keywords (LLM step)
 2. Searches for 5,000 candidate products
 3. Filters down to ~30 based on price, rating, reviews, category
 4. Evaluates relevance with LLM
 5. Ranks and selects the best match
 
-Each step is instrumented with X-Ray, showing how debugging works in practice.
+**2. Listing Optimization:**
+1. Analyzes current listing
+2. Finds top competitor listings
+3. Extracts patterns from high performers
+4. Generates 150+ content variations
+5. Scores and selects best version
+
+**3. Product Categorization:**
+1. Extracts product attributes
+2. Matches against 50+ categories
+3. Filters by confidence threshold
+4. Resolves ambiguous matches with LLM
+5. Selects best-fit category
+
+Each pipeline is fully instrumented with X-Ray, showing how debugging works across different use cases.
 
 ## License
 
