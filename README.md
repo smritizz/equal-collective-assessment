@@ -130,15 +130,14 @@ assessment/
 
 ## API Endpoints
 
-- `POST /api/ingest` - Ingest events from SDK
-- `GET /api/runs` - Query runs with filters
-- `GET /api/runs/:runId` - Get specific run details
-- `GET /api/steps` - Query steps across runs
-- `GET /api/query/filter-elimination` - Find runs with high filter elimination rates
-- `GET /api/pipelines` - List all pipelines
-- `GET /api/pipelines/:pipeline/stats` - Get statistics for a pipeline
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for full API specification.
+- `GET /health` - Health check, returns `{status, timestamp}`
+- `POST /api/ingest` - Accepts `{events: []}` array from SDK, returns `{success, processed}`
+- `GET /api/runs` - Query runs with filters (pipeline, status, time range, step count), returns paginated runs array
+- `GET /api/runs/:runId` - Get single run by ID, returns run object with all steps
+- `GET /api/steps` - Query steps across runs (by runId, name, type, pipeline), returns paginated steps array
+- `GET /api/query/filter-elimination` - Find filter steps eliminating >X% candidates (threshold, pipeline params), returns matches array
+- `GET /api/pipelines` - List all pipeline names, returns `{pipelines: []}`
+- `GET /api/pipelines/:pipeline/stats` - Get statistics for specific pipeline, returns `{totalRuns, successCount, errorCount, avgDuration, avgStepCount}`
 
 ## Known Limitations
 

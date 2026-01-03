@@ -11,7 +11,7 @@ console.log('Server will run on http://localhost:3001');
 console.log('Press Ctrl+C to stop\n');
 
 const apiProcess = spawn('npm', ['start'], {
-  cwd: path.join(__dirname, 'api'),
+  cwd: path.join(__dirname, 'backend'),
   stdio: 'inherit',
   shell: true,
 });
