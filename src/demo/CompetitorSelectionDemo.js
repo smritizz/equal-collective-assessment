@@ -1,6 +1,3 @@
-// Demo: Competitor Selection Pipeline
-// Shows how to instrument a multi-step process with X-Ray
-
 import { getXRay } from '../xray-sdk/index';
 
 class CompetitorSelectionDemo {
@@ -19,19 +16,14 @@ class CompetitorSelectionDemo {
     });
 
     try {
-      // Step 1: Generate keywords (LLM step - non-deterministic)
       const keywords = await this.generateKeywords(sellerProduct);
 
-      // Step 2: Search for candidates
       const candidates = await this.searchCandidates(keywords);
 
-      // Step 3: Apply filters
       const filtered = await this.applyFilters(candidates, sellerProduct);
 
-      // Step 4: LLM-based relevance evaluation
       const evaluated = await this.evaluateRelevance(filtered, sellerProduct);
 
-      // Step 5: Rank and select best match
       const bestMatch = await this.rankAndSelect(evaluated, sellerProduct);
 
       this.xray.endRun({
@@ -49,11 +41,9 @@ class CompetitorSelectionDemo {
     }
   }
 
-  // Step 1: Generate keywords from product info
   async generateKeywords(product) {
     const startTime = Date.now();
 
-    // Simulate LLM call
     await this.delay(200);
 
     const keywords = [
@@ -76,14 +66,11 @@ class CompetitorSelectionDemo {
     return keywords;
   }
 
-  // Step 2: Search the catalog
   async searchCandidates(keywords) {
     const startTime = Date.now();
 
-    // Simulate API search
     await this.delay(300);
 
-    // Generate mock candidates
     const candidates = [];
     for (let i = 0; i < 5000; i++) {
       candidates.push({
@@ -104,7 +91,7 @@ class CompetitorSelectionDemo {
       type: 'search',
       input: { keywords },
       output,
-      candidates: candidates.slice(0, 100), // Only store sample
+      candidates: candidates.slice(0, 100),
       candidateLimit: 100,
       reasoning: `Searched catalog and found ${candidates.length} candidate products`,
       duration: Date.now() - startTime,
@@ -113,7 +100,6 @@ class CompetitorSelectionDemo {
     return candidates;
   }
 
-  // Step 3: Filter by price, rating, reviews, category
   async applyFilters(candidates, sellerProduct) {
     const startTime = Date.now();
 
@@ -125,22 +111,18 @@ class CompetitorSelectionDemo {
     candidates.forEach(candidate => {
       const reasons = [];
 
-      // Price filter
       if (candidate.price < sellerProduct.price * 0.5 || candidate.price > sellerProduct.price * 2) {
         reasons.push('price_out_of_range');
       }
 
-      // Rating filter
       if (candidate.rating < 3.5) {
         reasons.push('low_rating');
       }
 
-      // Review count filter
       if (candidate.reviewCount < 10) {
         reasons.push('insufficient_reviews');
       }
 
-      // Category match
       if (candidate.category !== sellerProduct.category) {
         reasons.push('category_mismatch');
       }
@@ -168,7 +150,7 @@ class CompetitorSelectionDemo {
       },
       output,
       candidates: passed.slice(0, 50),
-      filtered: filtered.slice(0, 50), // Sample of filtered items
+      filtered: filtered.slice(0, 50),
       filteredLimit: 50,
       reasoning: `Applied filters: ${passed.length} passed, ${filtered.length} filtered out`,
       duration: Date.now() - startTime,
@@ -177,7 +159,6 @@ class CompetitorSelectionDemo {
     return passed;
   }
 
-  // Step 4: Use LLM to score relevance
   async evaluateRelevance(candidates, sellerProduct) {
     const startTime = Date.now();
 
@@ -185,11 +166,10 @@ class CompetitorSelectionDemo {
 
     const evaluated = candidates.map(candidate => ({
       ...candidate,
-      relevanceScore: Math.random() * 0.3 + 0.7, // Simulate LLM scoring
+      relevanceScore: Math.random() * 0.3 + 0.7,
       reasoning: `Product matches on ${Math.floor(Math.random() * 3) + 2} key attributes`,
     }));
 
-    // Filter out low relevance
     const highRelevance = evaluated.filter(c => c.relevanceScore > 0.75);
     const lowRelevance = evaluated.filter(c => c.relevanceScore <= 0.75);
 
@@ -212,13 +192,11 @@ class CompetitorSelectionDemo {
     return highRelevance;
   }
 
-  // Step 5: Pick the best match
   async rankAndSelect(candidates, sellerProduct) {
     const startTime = Date.now();
 
     await this.delay(100);
 
-    // Sort by relevance score
     const ranked = candidates.sort((a, b) => b.relevanceScore - a.relevanceScore);
     const bestMatch = ranked[0];
 
@@ -229,7 +207,7 @@ class CompetitorSelectionDemo {
       type: 'rank',
       input: { candidateCount: candidates.length },
       output,
-      candidates: ranked.slice(0, 10), // Top 10
+      candidates: ranked.slice(0, 10),
       reasoning: `Ranked ${candidates.length} candidates by relevance score, selected top match`,
       duration: Date.now() - startTime,
     });

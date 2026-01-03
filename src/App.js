@@ -16,7 +16,6 @@ function App() {
   const [selectedAlgorithm, setSelectedAlgorithm] = useState('competitor-selection');
 
   useEffect(() => {
-    // Initialize X-Ray SDK
     initXRay({
       apiUrl: 'http://localhost:3001/api',
       enabled: true,
@@ -93,11 +92,10 @@ function App() {
         result = await demo.categorizeProduct(product);
       }
 
-      // Flush any pending events
       await getXRay().flush();
 
       setResult(result);
-      setTimeout(loadRuns, 500); // Reload runs after a short delay
+      setTimeout(loadRuns, 500);
     } catch (err) {
       setError(err.message);
     } finally {

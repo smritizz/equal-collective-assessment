@@ -1,6 +1,3 @@
-// Demo: Product Categorization Pipeline
-// Classify products into the right category from thousands of options
-
 import { getXRay } from '../xray-sdk/index';
 
 class ProductCategorizationDemo {
@@ -8,9 +5,6 @@ class ProductCategorizationDemo {
     this.xray = getXRay();
   }
 
-  /**
-   * Simulate the full product categorization pipeline
-   */
   async categorizeProduct(product) {
     this.xray.startRun({
       pipeline: 'product-categorization',
@@ -22,19 +16,14 @@ class ProductCategorizationDemo {
     });
 
     try {
-      // Step 1: Extract product attributes
       const attributes = await this.extractAttributes(product);
 
-      // Step 2: Match against category requirements
       const categoryMatches = await this.matchCategories(attributes);
 
-      // Step 3: Filter by confidence threshold
       const highConfidence = await this.filterByConfidence(categoryMatches);
 
-      // Step 4: Handle ambiguous cases
       const resolved = await this.resolveAmbiguity(highConfidence, product);
 
-      // Step 5: Select best-fit category
       const bestCategory = await this.selectBestCategory(resolved);
 
       this.xray.endRun({
@@ -52,9 +41,6 @@ class ProductCategorizationDemo {
     }
   }
 
-  /**
-   * Step 1: Extract product attributes
-   */
   async extractAttributes(product) {
     const startTime = Date.now();
     await this.delay(180);
@@ -86,14 +72,10 @@ class ProductCategorizationDemo {
     return attributes;
   }
 
-  /**
-   * Step 2: Match against category requirements
-   */
   async matchCategories(attributes) {
     const startTime = Date.now();
     await this.delay(300);
 
-    // Simulate matching against 10,000+ categories
     const allCategories = [
       { id: 'cat_electronics_phones', name: 'Electronics > Phones', keywords: ['phone', 'mobile', 'smartphone'], confidence: 0.0 },
       { id: 'cat_electronics_accessories', name: 'Electronics > Accessories', keywords: ['charger', 'cable', 'adapter'], confidence: 0.0 },
@@ -102,7 +84,6 @@ class ProductCategorizationDemo {
       { id: 'cat_electronics_audio', name: 'Electronics > Audio', keywords: ['speaker', 'headphone', 'audio'], confidence: 0.0 },
     ];
 
-    // Generate more categories
     const categories = [];
     for (let i = 0; i < 50; i++) {
       const category = {
@@ -114,7 +95,6 @@ class ProductCategorizationDemo {
       categories.push(category);
     }
 
-    // Score matches
     const matches = categories.map(cat => {
       const keywordMatches = attributes.keywords.filter(kw =>
         cat.keywords.some(ck => ck.includes(kw) || kw.includes(ck))
@@ -139,9 +119,6 @@ class ProductCategorizationDemo {
     return matches;
   }
 
-  /**
-   * Step 3: Filter by confidence threshold
-   */
   async filterByConfidence(matches) {
     const startTime = Date.now();
     await this.delay(120);
@@ -174,21 +151,16 @@ class ProductCategorizationDemo {
     return highConfidence;
   }
 
-  /**
-   * Step 4: Resolve ambiguous cases
-   */
   async resolveAmbiguity(matches, product) {
     const startTime = Date.now();
     await this.delay(250);
 
-    // Simulate LLM-based disambiguation
     const resolved = matches.map(match => ({
       ...match,
       disambiguationScore: Math.random() * 0.2 + 0.7,
       reasoning: `Category ${match.name} matches based on ${Math.floor(match.confidence * 10)}/10 confidence`,
     }));
 
-    // Filter ambiguous ones
     const clear = resolved.filter(m => m.disambiguationScore > 0.75);
     const ambiguous = resolved.filter(m => m.disambiguationScore <= 0.75);
 
@@ -211,14 +183,10 @@ class ProductCategorizationDemo {
     return clear;
   }
 
-  /**
-   * Step 5: Select best-fit category
-   */
   async selectBestCategory(matches) {
     const startTime = Date.now();
     await this.delay(100);
 
-    // Handle case where no matches are provided
     if (!matches || matches.length === 0) {
       const output = { selected: null, rank: 0, error: 'No matches to select from' };
       
@@ -235,7 +203,6 @@ class ProductCategorizationDemo {
       throw new Error('No category matches available for selection');
     }
 
-    // Rank by combined confidence and disambiguation score
     const ranked = matches
       .map(m => ({
         ...m,

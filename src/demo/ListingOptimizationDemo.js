@@ -1,6 +1,3 @@
-// Demo: Listing Optimization Pipeline
-// Generate better product listings by learning from top competitors
-
 import { getXRay } from '../xray-sdk/index';
 
 class ListingOptimizationDemo {
@@ -8,9 +5,6 @@ class ListingOptimizationDemo {
     this.xray = getXRay();
   }
 
-  /**
-   * Simulate the full listing optimization pipeline
-   */
   async optimizeListing(currentListing) {
     this.xray.startRun({
       pipeline: 'listing-optimization',
@@ -22,19 +16,14 @@ class ListingOptimizationDemo {
     });
 
     try {
-      // Step 1: Analyze current listing
       await this.analyzeListing(currentListing);
 
-      // Step 2: Find top competitors
       const competitors = await this.findTopCompetitors(currentListing);
 
-      // Step 3: Extract high-performing patterns
       const patterns = await this.extractPatterns(competitors);
 
-      // Step 4: Generate content variations
       const variations = await this.generateVariations(currentListing, patterns);
 
-      // Step 5: Score and select best version
       const optimized = await this.scoreAndSelect(variations, currentListing);
 
       this.xray.endRun({
@@ -52,9 +41,6 @@ class ListingOptimizationDemo {
     }
   }
 
-  /**
-   * Step 1: Analyze current listing
-   */
   async analyzeListing(listing) {
     const startTime = Date.now();
     await this.delay(150);
@@ -82,9 +68,6 @@ class ListingOptimizationDemo {
     return analysis;
   }
 
-  /**
-   * Step 2: Find top competitors
-   */
   async findTopCompetitors(listing) {
     const startTime = Date.now();
     await this.delay(250);
@@ -118,14 +101,10 @@ class ListingOptimizationDemo {
     return competitors;
   }
 
-  /**
-   * Step 3: Extract high-performing patterns
-   */
   async extractPatterns(competitors) {
     const startTime = Date.now();
     await this.delay(200);
 
-    // Filter to top performers
     const topPerformers = competitors
       .filter(c => c.salesRank < 1000 && c.rating > 4.0)
       .slice(0, 30);
@@ -162,9 +141,6 @@ class ListingOptimizationDemo {
     return patterns;
   }
 
-  /**
-   * Step 4: Generate content variations
-   */
   async generateVariations(listing, patterns) {
     const startTime = Date.now();
     await this.delay(350);
@@ -197,18 +173,13 @@ class ListingOptimizationDemo {
     return variations;
   }
 
-  /**
-   * Step 5: Score and select best version
-   */
   async scoreAndSelect(variations, originalListing) {
     const startTime = Date.now();
     await this.delay(150);
 
-    // Filter by quality threshold
     const highQuality = variations.filter(v => v.qualityScore > 0.75);
     const lowQuality = variations.filter(v => v.qualityScore <= 0.75);
 
-    // Rank by combined score
     const ranked = highQuality
       .map(v => ({
         ...v,

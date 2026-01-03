@@ -1,5 +1,3 @@
-// X-Ray SDK - Debug multi-step algorithmic systems by capturing decisions, not just logs
-
 class XRaySDK {
   constructor(config = {}) {
     this.apiUrl = config.apiUrl || 'http://localhost:3001/api';
@@ -12,7 +10,6 @@ class XRaySDK {
     this.pendingEvents = [];
   }
 
-  // Start tracking a new pipeline run
   startRun(context) {
     if (!this.enabled) return null;
 
@@ -28,13 +25,11 @@ class XRaySDK {
       timestamp: new Date().toISOString(),
     };
 
-    // Send start event asynchronously
     this._sendEvent('run_start', runContext).catch(this.onError);
 
     return this.runId;
   }
 
-  // Record a step with its inputs, outputs, and reasoning
   recordStep(step) {
     if (!this.enabled || !this.runId) return null;
 

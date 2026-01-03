@@ -1,5 +1,3 @@
-// X-Ray API - Ingest and query pipeline run data
-
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -7,21 +5,17 @@ const bodyParser = require('body-parser');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// In-memory storage (in production, use a database)
-const runs = new Map(); // runId -> run data
-const steps = new Map(); // stepId -> step data
-const runsByPipeline = new Map(); // pipeline -> [runIds]
+const runs = new Map();
+const steps = new Map();
+const runsByPipeline = new Map();
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Ingest events from the SDK
 app.post('/api/ingest', (req, res) => {
   try {
     const { events } = req.body;
@@ -45,7 +39,6 @@ app.post('/api/ingest', (req, res) => {
             status: 'running',
           });
 
-          // Index by pipeline
           if (!runsByPipeline.has(data.pipeline)) {
             runsByPipeline.set(data.pipeline, []);
           }
@@ -55,7 +48,6 @@ app.post('/api/ingest', (req, res) => {
         case 'step':
           steps.set(data.stepId, data);
 
-          // Add step to run
           const run = runs.get(data.runId);
           if (run) {
             run.steps.push(data);
@@ -82,7 +74,6 @@ app.post('/api/ingest', (req, res) => {
   }
 });
 
-// Get a specific run by ID
 app.get('/api/runs/:runId', (req, res) => {
   const { runId } = req.params;
   const run = runs.get(runId);
@@ -91,8 +82,6 @@ app.get('/api/runs/:runId', (req, res) => {
     return res.status(404).json({ error: 'Run not found' });
   }
 
-  // Steps are already stored as full objects in run.steps array
-  // Just return the run with steps (they're already complete)
   const enrichedRun = {
     ...run,
     steps: run.steps || [],
@@ -101,7 +90,6 @@ app.get('/api/runs/:runId', (req, res) => {
   res.json(enrichedRun);
 });
 
-// Query runs with filters
 app.get('/api/runs', (req, res) => {
   const {
     pipeline,
@@ -116,17 +104,14 @@ app.get('/api/runs', (req, res) => {
 
   let results = Array.from(runs.values());
 
-  // Filter by pipeline
   if (pipeline) {
     results = results.filter(run => run.pipeline === pipeline);
   }
 
-  // Filter by status
   if (status) {
     results = results.filter(run => run.status === status);
   }
 
-  // Filter by time range
   if (startTime) {
     results = results.filter(run => run.startTime >= startTime);
   }
@@ -134,7 +119,6 @@ app.get('/api/runs', (req, res) => {
     results = results.filter(run => run.startTime <= endTime);
   }
 
-  // Filter by step count
   if (minSteps) {
     results = results.filter(run => run.steps.length >= parseInt(minSteps));
   }
@@ -142,10 +126,8 @@ app.get('/api/runs', (req, res) => {
     results = results.filter(run => run.steps.length <= parseInt(maxSteps));
   }
 
-  // Sort by start time (newest first)
   results.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
 
-  // Paginate
   const total = results.length;
   const paginated = results.slice(parseInt(offset), parseInt(offset) + parseInt(limit));
 
@@ -157,7 +139,6 @@ app.get('/api/runs', (req, res) => {
   });
 });
 
-// Query steps across runs
 app.get('/api/steps', (req, res) => {
   const {
     runId,
@@ -170,31 +151,25 @@ app.get('/api/steps', (req, res) => {
 
   let results = Array.from(steps.values());
 
-  // Filter by runId
   if (runId) {
     results = results.filter(step => step.runId === runId);
   }
 
-  // Filter by step name
   if (name) {
     results = results.filter(step => step.name === name);
   }
 
-  // Filter by step type
   if (type) {
     results = results.filter(step => step.type === type);
   }
 
-  // Filter by pipeline (requires joining with runs)
   if (pipeline) {
     const pipelineRunIds = new Set(runsByPipeline.get(pipeline) || []);
     results = results.filter(step => pipelineRunIds.has(step.runId));
   }
 
-  // Sort by timestamp
   results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-  // Paginate
   const total = results.length;
   const paginated = results.slice(parseInt(offset), parseInt(offset) + parseInt(limit));
 
@@ -206,8 +181,6 @@ app.get('/api/steps', (req, res) => {
   });
 });
 
-// Find runs where filtering eliminated >X% of candidates
-// This is the cross-pipeline query example
 app.get('/api/query/filter-elimination', (req, res) => {
   const { threshold = 90, pipeline } = req.query;
   const thresholdPercent = parseFloat(threshold) / 100;
@@ -220,7 +193,6 @@ app.get('/api/query/filter-elimination', (req, res) => {
 
   allRuns.forEach(run => {
     run.steps.forEach(step => {
-      // Look for filter-type steps with candidates and filtered data
       if (step.type === 'filter' && step.candidates && step.filtered) {
         const totalCandidates = step.candidates._summarized
           ? step.candidates.total
@@ -253,7 +225,6 @@ app.get('/api/query/filter-elimination', (req, res) => {
   res.json({ matches: matchingRuns, count: matchingRuns.length });
 });
 
-// Get stats for a specific pipeline
 app.get('/api/pipelines/:pipeline/stats', (req, res) => {
   const { pipeline } = req.params;
   const pipelineRuns = Array.from(runs.values()).filter(r => r.pipeline === pipeline);
@@ -279,13 +250,11 @@ app.get('/api/pipelines/:pipeline/stats', (req, res) => {
   res.json({ pipeline, stats });
 });
 
-// List all pipelines
 app.get('/api/pipelines', (req, res) => {
   const pipelines = Array.from(runsByPipeline.keys());
   res.json({ pipelines });
 });
 
-// Start server
 app.listen(PORT, () => {
   console.log(`X-Ray API server running on http://localhost:${PORT}`);
 });
